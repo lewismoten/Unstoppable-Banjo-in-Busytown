@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Client</title>
+		
+	</head>
+	<body>
+			<h1>Client</h1>
+
+<!-- 
+
+Use a combination of WebSockets and RTCPeerConnection to
+create Peer-to-Peer connection.
+
+This requires 2 Clients running javascript, and a server that can handle web sockets.
+
+Client 1 Creates RTC Peer Connection
+Client 1 Uses WebSockets to connect to server
+- waits...
+Client 2 Creates RTC Peer Connection
+Client 2 Uses WebSockets to connect to Server
+- Client 2 Creates an offer to Client 1
+- Client 1 Accepts Offer
+
+Client 2 Closes WebSockets to Server
+Client 1 Closes WebSockets to Server
+
+
+-->
+
+			Server: <input id="serverTextBox" type="text" value="localhost">
+			<button onclick="clickConnectButton()">Connect</button><br />
+			Ready State: <label id="readyStateLabel"></label>
+
+			<hr>
+			<textarea id="logTextArea" cols="80" rows="7"></textarea>
+			<script type="text/javascript" src="client.js"></script>
+	</body>
+</html>
