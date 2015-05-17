@@ -107,6 +107,32 @@ var servers = null;
 var options = {optional: [{RtpDataChannels: true}]};
 var localPeer = new window.webkitRTCPeerConnection(servers, options);
 var remotePeer = new window.webkitRTCPeerConnection(servers, options);
+/*
+.iceConnectionState
+.iceGatheringState
+.locationDescription
+	.sdp
+	.type
+.onAddStream
+.onConnecting
+.onDataChannel
+.onIceCandidate
+.onIceConnectionStateChange
+.onNegotiationStateChange
+.onOpen
+.onRemoveStream
+.onSignalingStateChange
+.remoteDescription
+.signalingState
+
+
+.addIceCandidate
+.addStream
+.close()
+.createAnswer()
+.createDTMFSender
+
+*/
 
 var remoteChannel;
 var localChannel;
