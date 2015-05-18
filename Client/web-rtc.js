@@ -17,14 +17,17 @@ var IceCandidate = window.RTCIceCandidate ||
 	window.mozRTCIceCandidate ||
 	window.webkitRTCIceCandidate;
 
-function peerError() {
-	console.log('error', arguments);
+function peerError(error) {
+	console.log('error', error);
+}
+function peerSuccess() {
+	console.log('success');
 }
 
 function wireUpConnectionEvents(name, connection) {
 	var iceCandidates = [];
-	connection.onaddstream = function() { console.log(name, 'add stream'); }
-	connection.onconnecting = function() { console.log(name, 'connecting'); }
+	connection.onaddstream = function() { console.log('connection', name, 'add stream'); }
+	connection.onconnecting = function() { console.log('connection', name, 'connecting'); }
 	connection.ondatachannel = function() { console.log(name, 'data channel'); }
 	connection.onicecandidate = function(rtcIceCandidateEvent) {
 		console.log(name, 'ice candidate'); 
@@ -54,7 +57,7 @@ function wireUpChannelEvents(name, channel) {
 		input.innerHTML = messageEvent.data;
 
 	};
-	channel.onerror = function() { console.log(name, 'channel error');};
+	channel.onerror = function() { console.error(name, 'channel error');};
 	channel.onclose = function() { console.log(name, 'channel close');};
 
 }
@@ -70,12 +73,19 @@ function startServerButton() {
 	serverChannel = peerServer.createDataChannel(dataChannelName, {reliable: false});
 	wireUpChannelEvents('server', serverChannel);
 
-	peerServer.createOffer(serverOffering, peerError);
+	console.log('creating an offer on the server');
+	peerServer.createOffer(serverOffering, 
+		function(error) { console.error('error: server creating offer', error); }
+		);
 
 }
 
 function serverOffering(description) {
-	peerServer.setLocalDescription(description);
+	console.log('setting servers local description');
+	peerServer.setLocalDescription(description, 
+		function() { console.log('success: set servers local description');},
+		function(error) { console.error('error: set servers local description', error);}
+		);
 	localOffer.value = description.sdp;
 }
 
@@ -99,13 +109,29 @@ function acceptOfferButton() {
 	clientChannel = peerClient.createDataChannel(dataChannelName, {reliable: false});
 	wireUpChannelEvents('client', clientChannel);
 
-	peerClient.setRemoteDescription(description, peerError);
-	peerClient.createAnswer(clientAnswering, peerError);
+	console.log('setting clients remote description');
+	peerClient.setRemoteDescription(description,
+		clientRemoteDescriptionSetSuccessfully,
+		function(error) { console.error('failed to set clients remote description', error); } 
+		);
+
+}
+
+function clientRemoteDescriptionSetSuccessfully() {
+	console.log('creating an answer on the client');
+	peerClient.createAnswer(clientAnswering, 
+		function() { console.log('success: client created answer'); }, 
+		function(error) { console.error('failed: client trying to create an answer', error); }
+		);
 }
 
 function clientAnswering(description) {
 	clientAnswer.value = description.sdp;
-	peerClient.setLocalDescription(description);
+	console.log('setting clients local description');
+	peerClient.setLocalDescription(description,
+		function() { console.log('success: client set local description'); }, 
+		function(error) { console.error('failed: client trying to set a local description', error); }
+		);
 }
 
 function sendAnswer() {
@@ -119,7 +145,8 @@ function acceptAnswerButton() {
 	};
 
 	var description = new SessionDescription(answer);
-	peerServer.setRemoteDescription(description);
+	console.log('setting servers remote description');
+	peerServer.setRemoteDescription(description, peerSuccess, peerError);
 }
 
 function sendIceCandidatesToClient() {
@@ -130,7 +157,8 @@ function addServersIceCandidates() {
 	var candidates = JSON.parse(serverCandidateOffer.value);
 	for(var i = 0; i < candidates.length; i++) {
 		var candidate = new IceCandidate(candidates[i]);
-		peerClient.addIceCandidate(candidate);
+		console.log('adding candidate to client', candidate);
+		peerClient.addIceCandidate(candidate, peerSuccess, peerError);
 	}
 }
 
@@ -142,7 +170,8 @@ function addClientsIceCandidates() {
 	var candidates = JSON.parse(clientCandidateOffer.value);
 	for(var i = 0; i < candidates.length; i++) {
 		var candidate = new IceCandidate(candidates[i]);
-		peerServer.addIceCandidate(candidate);
+		console.log('adding candidate to server', candidate);
+		peerServer.addIceCandidate(candidate, peerSuccess, peerError);
 	}
 }
 
