@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Web RTC Example</title>
+		
+	</head>
+	<body>
+			<h1>Web RTC Example</h1>
+			<p>
+				This page demonstrates how to establish and
+				communicate over a peer-to-peer connection
+				using JavaScript WebRTC. You can test the two
+				RTC clients on this page alone, or on individual
+				pages and computers. Just follow along the column
+				for your role (Server or Client), and send the
+				information to the other computer to connect back
+				to you.
+			</p>
+
+			<table width=100%>
+				<thead>
+					<td>Server</td>
+					<td>Client</td>
+				</thead>
+				<tr>
+					<td><button onclick="startServerButton()">Create Offer</button></td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>
+						Offer:<br />
+						<textarea id="localOffer" style="width: 100%;height: 100px; border-size: 0px"></textarea></td>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>
+						<button onclick="sendOffer()">Send Offer to Client --&gt;</button>
+					</td>
+					<td>
+						Offer:<br />
+						<textarea id="remoteOffer" style="width: 100%; height: 100px"></textarea></td>
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td><button onclick="acceptOfferButton()">Accept Offer</button></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						Answer:<br />
+						<textarea id="clientAnswer" style="width: 100%; height: 100px"></textarea></td>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Answer:<br />
+						<textarea id="serverAnswer" style="width: 100%;height: 100px; border-size: 0px"></textarea></td>
+					</td>
+					<td>
+						<button onclick="sendAnswer()">&lt;-- Send Answer to Server</button>
+					</td>
+				</tr>
+				<tr>
+					<td><button onclick="acceptAnswerButton()">Accept Answer</button></td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Ice Candidates:<textarea id="serverCandidates" style="width:100%;height: 100px; border-size: 0px"></textarea></td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td><button onclick="sendIceCandidatesToClient()">Send Candidates --&gt;</button></td>
+					<td>Ice Candidates:<textarea id="serverCandidateOffer" style="width:100%;height: 100px; border-size: 0px"></textarea></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td>
+						<button onclick="addServersIceCandidates()">Add Servers Ice Candidates</button>
+					</td>
+				</tr>
+				
+				<tr>
+					<td>&nbsp;</td>
+					<td>Ice Candidates:<textarea id="clientCandidates" style="width:100%;height: 100px; border-size: 0px"></textarea></td>
+				</tr>
+				<tr>
+					<td>Ice Candidates:<textarea id="clientCandidateOffer" style="width:100%;height: 100px; border-size: 0px"></textarea></td>
+					<td><button onclick="sendIceCandidatesToServer()">&lt;-- Send Candidates</button></td>
+				</tr>
+				<tr>
+					<td>
+						<button onclick="addClientsIceCandidates()">Add Clients Ice Candidates</button>
+					</td>
+					<td>&nbsp;</td>
+				</tr>
+
+				<tr>
+					<td>
+						<input id="serverMessageTextBox">
+						<button onclick="sendMessageToClient()">Send</button>
+					</td>
+					<td>
+						Message Received: <label id="clientReceived"></label>
+					</td>
+				</tr>
+
+				<tr>
+					<td>
+						Message Received: <label id="serverReceived"></label>
+					</td>
+					<td>
+						<input id="clientMessageTextBox">
+						<button onclick="sendMessageToServer()">Send</button>
+					</td>
+				</tr>
+
+			</table>
+
+<!-- 
+
+Use a combination of WebSockets and RTCPeerConnection to
+create Peer-to-Peer connection.
+
+This requires 2 Clients running javascript, and a server that can handle web sockets.
+
+Client 1 Creates RTC Peer Connection
+Client 1 Uses WebSockets to connect to server
+- waits...
+Client 2 Creates RTC Peer Connection
+Client 2 Uses WebSockets to connect to Server
+- Client 2 Creates an offer to Client 1
+- Client 1 Accepts Offer
+
+Client 2 Closes WebSockets to Server
+Client 1 Closes WebSockets to Server
+
+
+-->
+			<script type="text/javascript" src="web-rtc.js"></script>
+	</body>
+</html>
