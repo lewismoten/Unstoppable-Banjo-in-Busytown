@@ -1,55 +1,52 @@
 <!doctype html>
 <html>
 	<head>
-		<title>Web RTC Example: Offer</title>
+		<title>Web RTC Example: Answer</title>
 		<meta charset="UTF-8">
 		<link rel="stylesheet" type="text/css" href="rtc.css" />
 	</head>
 	<body>
-			<h1>Web RTC Example: Offer</h1>
+			<h1>Web RTC Example: Answer</h1>
 
 			<div id="logWindow" class="log">Ready</div>
 
 			<h2>Establishing a Peer-to-Peer connection</h2>
 			<p>
-				One of the peers needs to initiate a connection.
-				A peer connection is instantiated
-				and used to create an offer.
+				The remote peer will initiate a connection.
+				This peer will take the remote peers offer and create an answer.
 			</p>
 
-			Signaling State: <span id="signalingState">Unknown</span><br />
-			<button onclick="onCreateOffer()">Create Offer</button>
-
-			<h3>Local Session Description</h3>
+			<h3>Remote Session Description</h3>
 
 			<p>
-				A local session description is prepared
-				and is then sent to the remote connection
-				as an offer. The SDP (Session Description Protocol)
+				The remote peer will create a new session description
+				and send it as an offer. The SDP (Session Description Protocol)
 				also known as a session profile
 				describes the communications of the session.
 				It would specify type of data to exchange
 				such as audio and/or video. 
 			</p>
+			<p>
+				Paste the SDP from the remote peer.
+			</p>
 
+			Signaling State: <span id="signalingState">Unknown</span><br />
+			<textarea id="remoteSessionDescription" class="sdp"></textarea>
+			<button onclick="onAcceptOffer()">Accept Offer</button>
+
+
+			<h3>Local Session Description</h3>
+
+			<p>
+				A local session description is prepared and sent
+				in response to the offer as an answer.
+
+			</p>
 			<p>
 				Copy the SDP and send it to the remote peer.
 			</p>
 
 			<textarea id="localSessionDescription" class="sdp"></textarea>
-
-			<h3>Remote Session Description</h3>
-
-			<p>
-				The remote peer will accept the offer and create an answer
-				to send back as a remote session description.
-			</p>
-			<p>
-				Paste the SDP from the remote peer.
-			</p>
-
-			<textarea id="remoteSessionDescription" class="sdp"></textarea>
-			<button onclick="onAcceptAnswer()">Accept Answer</button>
 
 			<h2>Establishing Connections</h2>
 			<p>
@@ -61,6 +58,20 @@
 				These candidates offer information regarding IP addresses,
 				protocols, and ports for each network device. 
 			</p>
+
+			<h3>Remote ICE Candidates</h3>
+			<p>
+				The remote peer may have ice candidates to
+				establish a connection.
+			</p>
+			<p>
+				Paste the ICE candidates from the remote peer.
+			</p>
+			<textarea id="remoteIceCandidates" class="ice"></textarea>
+
+			<button onclick="onAddIceCandidates()">Add Remote Ice Candidates</button>
+
+
 			<h3>Local ICE Candidates</h3>
 			<p>
 				The list of ICE candidates will need to be passed to
@@ -73,18 +84,6 @@
 			</p>
 			ICE Gathering State: <span id="iceGatheringState">Unknown</span><br />
 			<textarea id="localIceCandidates" class="ice"></textarea>
-
-			<h3>Remote ICE Candidates</h3>
-			<p>
-				The remote peer also has ice candidates that
-				it may also offer to the local peer.
-			</p>
-			<p>
-				Paste the ICE candidates from the remote peer.
-			</p>
-			<textarea id="remoteIceCandidates" class="ice"></textarea>
-
-			<button onclick="onAddIceCandidates()">Add Clients Ice Candidates</button>
 
 			<h2>Exchanging Messages</h2>
 			<p>

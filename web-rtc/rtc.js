@@ -28,10 +28,9 @@ function reset() {
 	logWindow.innerHTML = 'Ready';
 	chatWindow.innerHTML = 'Channel Not Open';
 	iceCandidates = [];
-	localIceCandidates.value = '';
+	localIceCandidates.value = '(none)';
 	remoteIceCandidates.value = '';
 	localSessionDescription.value = '';
-	remoteSessionDescription.value = '';
 	iceConnectionState.innerHTML = 'Unknown';
 	iceGatheringState.innerHTML = 'Unknown';
 	signalingState.innerHTML = 'Unknown';
@@ -52,11 +51,7 @@ function displayChat(isLocal, message) {
 	chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function onCreateOffer() {
-
-	reset();
-
-	log('initializing');
+function createPeer() {
 
 	var servers = null;
 	var options = {optional: [{RtpDataChannels: true}]};
@@ -76,14 +71,52 @@ function onCreateOffer() {
 	connection.onremovestream = onConnectionRemoveStream;
 	connection.onsignalingstatechange = onConnectionSignalingStateChange;
 	connection.onnegotiationneeded = onConnectionNegotiationNeeded;
+}
+
+function createChannel() {
 
 	log('Creating data channel: ' + dataChannelName);
-	
+
 	dataChannel = connection.createDataChannel(dataChannelName, {reliable: false});
 	dataChannel.onopen = onChannelOpen;
 	dataChannel.onmessage = onChannelMessage;
 	dataChannel.onerror = onChannelError;
 	dataChannel.onclose = onChannelClose;
+
+}
+
+function onAcceptOffer() {
+	reset();
+
+	log('initializing');
+
+	createPeer();
+	createChannel();
+
+	var offer = {
+		sdp: remoteSessionDescription.value,
+		type: 'offer'
+	};
+
+	var description = new SessionDescription(offer);
+
+	log('Assigning offer as remote description');
+
+	connection.setRemoteDescription(
+		description, 
+		onSetRemoteDescriptionSuccess, 
+		onSetRemoteDescriptionError);
+}
+
+function onCreateOffer() {
+
+	reset();
+	remoteSessionDescription.value = '';
+
+	log('initializing');
+
+	createPeer();
+	createChannel();
 
 	log('Creating an offer...');
 	connection.createOffer(onCreateOfferSuccess, onCreateOfferError);
@@ -197,7 +230,7 @@ function onAcceptAnswer() {
 
 	var description = new SessionDescription(answer);
 
-	log('setting remote description');
+	log('Assigning answer as remote description');
 
 	connection.setRemoteDescription(
 		description, 
@@ -211,7 +244,32 @@ function onSetRemoteDescriptionError(error) {
 }
 
 function onSetRemoteDescriptionSuccess() {
+
 	log('Sucessfully set remote description');
+
+	if(connection.remoteDescription.type === "offer") {
+
+		log('Creating Answer');
+
+		connection.createAnswer(onCreateAnswerSuccess, onCreateAnswerError);
+	}
+}
+
+function onCreateAnswerSuccess(description) {
+	log('Successfully created an answer.');
+
+	localSessionDescription.value = description.sdp;
+
+	log('setting local description');
+
+	connection.setLocalDescription(
+		description, 
+		onSetLocalDescriptionSuccess,
+		onSetLocalDescriptionError);
+}
+
+function onCreateAnswerError(error) {
+	log('Failed to create an answer.');
 }
 
 function onAddIceCandidates() {
@@ -235,10 +293,24 @@ function onAddIceCandidateError(error) {
 }
 
 function onSendMessage() {
+
 	var message = messageTextBox.value;
-	dataChannel.send(message);
-	displayChat(true, message);
 	messageTextBox.value = '';
+
+	var state = dataChannel.readyState; 
+	switch(state) {
+		case 'connecting':
+		case 'closing':
+		case 'closed':
+			displayChat(null, 'Error: Channel state is: ' + state);
+			return;
+		case 'open':
+			dataChannel.send(message);
+			displayChat(true, message);
+			return;
+		default:
+			displayChat(null, 'Unknown state: ' + state);
+	}	
 }
 
 reset();
