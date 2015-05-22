@@ -55,6 +55,7 @@ function createPeer() {
 
 	var servers = null;
 	var options = {optional: [{RtpDataChannels: true}]};
+	options = undefined;
 
 	log('Instantiating Peer Connection object');
 
