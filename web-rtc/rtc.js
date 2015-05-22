@@ -17,6 +17,8 @@ var IceCandidate = window.RTCIceCandidate ||
 	window.webkitRTCIceCandidate;
 
 function log(message) {
+	displayStates();
+
 	var div = document.createElement('div');
 	var text = document.createTextNode(message);
 	div.appendChild(text);
@@ -92,12 +94,8 @@ function onAcceptOffer() {
 	log('initializing');
 
 	createPeer();
-	createChannel();
 
-	var offer = {
-		sdp: remoteSessionDescription.value,
-		type: 'offer'
-	};
+	var offer = JSON.parse(remoteSessionDescription.value);
 
 	var description = new SessionDescription(offer);
 
@@ -124,14 +122,22 @@ function onCreateOffer() {
 }
 
 function displayStates() {
-	//console.log(connection);
+	if(typeof connection === 'undefined') {
+		iceConnectionState.innerHTML = 'n/a';
+		iceGatheringState.innerHTML = 'n/a';
+		signalingState.innerHTML = 'n/a';
+		return;
+	}
+	
 	iceConnectionState.innerHTML = connection.iceConnectionState;
 	iceGatheringState.innerHTML = connection.iceGatheringState;
 	signalingState.innerHTML = connection.signalingState;
 }
 
 function onChannelOpen() {
-	displayChat(null, 'Opened');
+	displayChat(null, 'Channel has opened');
+	displayChat(true, '*joined the channel*');
+	dataChannel.send('*joined the channel*');
 }
 
 function onChannelMessage(messageEvent) {
@@ -155,8 +161,17 @@ function onConnectionConnecting() {
 	log('connection. on connecting'); 
 }
 
-function onConnectionDataChannel() {
-	log('connection. on data channel');
+function onConnectionDataChannel(dataChannelEvent) {
+	log('A data channel was added to the connection');
+
+	dataChannel = dataChannelEvent.channel;
+	log(dataChannel.label);
+
+	dataChannel.onopen = onChannelOpen;
+	dataChannel.onmessage = onChannelMessage;
+	dataChannel.onerror = onChannelError;
+	dataChannel.onclose = onChannelClose;
+
 }
 
 function onConnectionIceCandidate(rtcIceCandidateEvent) {
@@ -165,16 +180,21 @@ function onConnectionIceCandidate(rtcIceCandidateEvent) {
 		return;
 	}
 
-	log(rtcIceCandidateEvent.candidate.candidate);
+	log('local ' + rtcIceCandidateEvent.candidate.candidate);
 	
 	iceCandidates.push(rtcIceCandidateEvent.candidate);
-
-	localIceCandidates.value = JSON.stringify(iceCandidates);
 
 }
 
 function onConnectionIceConnectionStateChange() {
-	log('The connections ICE connection state has changed: ' + connection.iceConnectionState);
+	log('ICE Connection State Changed: ' + connection.iceConnectionState + ' (gathering=' + connection.iceGatheringState +')');
+
+	if(connection.iceGatheringState === 'complete') {
+
+		localIceCandidates.value = JSON.stringify(iceCandidates);
+
+	}
+
 	displayStates();
 }
 
@@ -200,20 +220,22 @@ function onCreateOfferError(error) {
 	log(error);
 }
 
-function onCreateOfferSuccess(description) {
+function onCreateOfferSuccess(rtcSessionDescription) {
+	
 	log('Successfully created an offer.');
 
-	localSessionDescription.value = description.sdp;
+	localSessionDescription.value = JSON.stringify(rtcSessionDescription);
 
 	log('Assigning offer as the local description...');
 
 	connection.setLocalDescription(
-		description, 
+		rtcSessionDescription, 
 		onSetLocalDescriptionSuccess,
 		onSetLocalDescriptionError);
 }
 
 function onSetLocalDescriptionError(error) {
+
 	log('Failed to set local description');
 	log(error);
 }
@@ -224,11 +246,7 @@ function onSetLocalDescriptionSuccess() {
 
 function onAcceptAnswer() {
 
-	var answer = {
-		sdp: remoteSessionDescription.value,
-		type: 'answer'
-	};
-
+	var answer = JSON.parse(remoteSessionDescription.value);
 	var description = new SessionDescription(answer);
 
 	log('Assigning answer as remote description');
@@ -240,6 +258,7 @@ function onAcceptAnswer() {
 }
 
 function onSetRemoteDescriptionError(error) {
+
 	log('Failed to set remote description');
 	log(error);
 }
@@ -256,15 +275,15 @@ function onSetRemoteDescriptionSuccess() {
 	}
 }
 
-function onCreateAnswerSuccess(description) {
+function onCreateAnswerSuccess(rtcSessionDescription) {
 	log('Successfully created an answer.');
 
-	localSessionDescription.value = description.sdp;
+	localSessionDescription.value = JSON.stringify(rtcSessionDescription);
 
 	log('setting local description');
 
 	connection.setLocalDescription(
-		description, 
+		rtcSessionDescription, 
 		onSetLocalDescriptionSuccess,
 		onSetLocalDescriptionError);
 }

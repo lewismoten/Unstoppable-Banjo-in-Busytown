@@ -8,6 +8,14 @@
 	<body>
 			<h1>Web RTC Example: Answer</h1>
 
+			<p>
+				This example needs a peer to make an
+				<a href="offer.html">offer</a>
+				and another peer to
+				<a href="answer.html">answer</a>
+				the offer.
+			</p>
+
 			<div id="logWindow" class="log">Ready</div>
 
 			<h2>Establishing a Peer-to-Peer connection</h2>
@@ -82,7 +90,10 @@
 			<p>
 				Copy the local ICE candidates and send them to the remote peer.
 			</p>
+			
 			ICE Gathering State: <span id="iceGatheringState">Unknown</span><br />
+			ICE Connection State: <span id="iceConnectionState">Unknown</span><br />
+			
 			<textarea id="localIceCandidates" class="ice"></textarea>
 
 			<h2>Exchanging Messages</h2>
@@ -92,7 +103,6 @@
 				they can send messages back and forth.
 			</p>
 
-			ICE Connection State: <span id="iceConnectionState">Unknown</span><br />
 
 			<div id="chatWindow" class="chat"></div>
 			<input id="messageTextBox">
