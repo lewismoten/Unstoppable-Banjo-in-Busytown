@@ -2,8 +2,6 @@ var connection;
 var dataChannel;
 var dataChannelName = 'myChannelName';
 
-var iceCandidates = [];
-
 var PeerConnection = window.RTCPeerConnection || 
 	window.mozRTCPeerConnection || 
 	window.webkitRTCPeerConnection;
@@ -29,9 +27,6 @@ function log(message) {
 function reset() {
 	logWindow.innerHTML = 'Ready';
 	chatWindow.innerHTML = 'Channel Not Open';
-	iceCandidates = [];
-	localIceCandidates.value = '(none)';
-	remoteIceCandidates.value = '';
 	localSessionDescription.value = '';
 	iceConnectionState.innerHTML = 'Unknown';
 	iceGatheringState.innerHTML = 'Unknown';
@@ -55,13 +50,11 @@ function displayChat(isLocal, message) {
 
 function createPeer() {
 
-	var servers = null;
-	var options = {optional: [{RtpDataChannels: true}]};
-	options = undefined;
-
 	log('Instantiating Peer Connection object');
 
-	connection = new PeerConnection(servers, options);
+	var configuration = null;
+	var options = undefined;
+	connection = new PeerConnection(configuration, options);
 
 	displayStates();
 
@@ -95,14 +88,12 @@ function onAcceptOffer() {
 
 	createPeer();
 
-	var offer = JSON.parse(remoteSessionDescription.value);
-
-	var description = new SessionDescription(offer);
+	var rtcSessionDescription = getRemoteDescription('offer');
 
 	log('Assigning offer as remote description');
 
 	connection.setRemoteDescription(
-		description, 
+		rtcSessionDescription, 
 		onSetRemoteDescriptionSuccess, 
 		onSetRemoteDescriptionError);
 }
@@ -118,7 +109,8 @@ function onCreateOffer() {
 	createChannel();
 
 	log('Creating an offer...');
-	connection.createOffer(onCreateOfferSuccess, onCreateOfferError);
+	var constraints = undefined;
+	connection.createOffer(onCreateOfferSuccess, onCreateOfferError, constraints);
 }
 
 function displayStates() {
@@ -174,16 +166,42 @@ function onConnectionDataChannel(dataChannelEvent) {
 
 }
 
+function displayLocalDescription() {
+
+	localSessionDescription.value = connection.localDescription.sdp;
+	var type = connection.localDescription.type;
+	var url = window.location.href.replace(/\/[^\/\.]+\.html/, '/' + type + '.html');
+	url += '?' + escape(connection.localDescription.sdp);
+
+	console.log('link', url);
+
+	var qrCode = 'http://chart.googleapis.com/chart';
+	qrCode += '?cht=qr';
+	qrCode += '&chs=300x300';
+	qrCode += '&chl=' + escape(url);
+
+	console.log('QR Code', qrCode);
+	//localSessionDescriptionImage.src = qrCode;
+
+}
+
+function getRemoteDescription(type) {
+	return new SessionDescription({sdp: remoteSessionDescription.value, type: type});
+}
+
 function onConnectionIceCandidate(rtcIceCandidateEvent) {
 
+	displayLocalDescription();
+	displayStates();
+
 	if(!rtcIceCandidateEvent.candidate) {
+		// undefined candidate usually means gathering state has completed
+		log('End of candidates');
+		displayStates();
 		return;
 	}
 
-	log('local ' + rtcIceCandidateEvent.candidate.candidate);
-	
-	iceCandidates.push(rtcIceCandidateEvent.candidate);
-
+	log('Added local ICE candidate');
 }
 
 function onConnectionIceConnectionStateChange() {
@@ -191,7 +209,7 @@ function onConnectionIceConnectionStateChange() {
 
 	if(connection.iceGatheringState === 'complete') {
 
-		localIceCandidates.value = JSON.stringify(iceCandidates);
+		displayLocalDescription();
 
 	}
 
@@ -224,8 +242,6 @@ function onCreateOfferSuccess(rtcSessionDescription) {
 	
 	log('Successfully created an offer.');
 
-	localSessionDescription.value = JSON.stringify(rtcSessionDescription);
-
 	log('Assigning offer as the local description...');
 
 	connection.setLocalDescription(
@@ -241,18 +257,21 @@ function onSetLocalDescriptionError(error) {
 }
 
 function onSetLocalDescriptionSuccess() {
+
 	log('Sucessfully set local description');
+
+	displayLocalDescription();
+
 }
 
 function onAcceptAnswer() {
 
-	var answer = JSON.parse(remoteSessionDescription.value);
-	var description = new SessionDescription(answer);
+	var rtcSessionDescription = getRemoteDescription('answer');
 
 	log('Assigning answer as remote description');
 
 	connection.setRemoteDescription(
-		description, 
+		rtcSessionDescription, 
 		onSetRemoteDescriptionSuccess, 
 		onSetRemoteDescriptionError);
 }
@@ -267,18 +286,17 @@ function onSetRemoteDescriptionSuccess() {
 
 	log('Sucessfully set remote description');
 
-	if(connection.remoteDescription.type === "offer") {
+	if(connection.remoteDescription.type === 'offer') {
 
 		log('Creating Answer');
 
-		connection.createAnswer(onCreateAnswerSuccess, onCreateAnswerError);
+		var constraints = undefined;;
+		connection.createAnswer(onCreateAnswerSuccess, onCreateAnswerError, constraints);
 	}
 }
 
 function onCreateAnswerSuccess(rtcSessionDescription) {
 	log('Successfully created an answer.');
-
-	localSessionDescription.value = JSON.stringify(rtcSessionDescription);
 
 	log('setting local description');
 
@@ -292,23 +310,25 @@ function onCreateAnswerError(error) {
 	log('Failed to create an answer.');
 }
 
-function onAddIceCandidates() {
-	var candidates = JSON.parse(remoteIceCandidates.value);
-	for(var i = 0; i < candidates.length; i++) {
-		var candidate = new IceCandidate(candidates[i]);
-		connection.addIceCandidate(
+function addNextRemoteIceCandidateInQueue() {
+
+	log('Next ICE candidate in queue');
+
+	connection.addIceCandidate(
 			candidate, 
 			onAddIceCandidateSuccess, 
 			onAddIceCandidateError);
-	}
 }
 
 function onAddIceCandidateSuccess() {
-	log('Added ICE candidate');
+
+	log('Added remote ICE candidate');
+
+	addNextRemoteIceCandidateInQueue();
 }
 
 function onAddIceCandidateError(error) {
-	log('Error adding ICE candidate');
+	log('Error adding remote ICE candidate');
 	log(error);
 }
 

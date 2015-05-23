@@ -55,54 +55,12 @@
 			</p>
 
 			<textarea id="localSessionDescription" class="sdp"></textarea>
+			<img id="localSessionDescriptionImage" width="300" height="300" />
 
-			<h2>Establishing Connections</h2>
-			<p>
-				Although the two peers are aware of each other, and the type
-				of data that will be exchanged, they are not yet aware of how
-				to reach one another. When local session descriptions were 
-				set, each peer started creating ICE (Interactive Connectivity
-				Establishment) candidates if communications are required. 
-				These candidates offer information regarding IP addresses,
-				protocols, and ports for each network device. 
-			</p>
-
-			<h3>Remote ICE Candidates</h3>
-			<p>
-				The remote peer may have ice candidates to
-				establish a connection.
-			</p>
-			<p>
-				Paste the ICE candidates from the remote peer.
-			</p>
-			<textarea id="remoteIceCandidates" class="ice"></textarea>
-
-			<button onclick="onAddIceCandidates()">Add Remote Ice Candidates</button>
-
-
-			<h3>Local ICE Candidates</h3>
-			<p>
-				The list of ICE candidates will need to be passed to
-				the remote peer. They will identify the shortest route that
-				can be used to reach the local peer. Only one of the peers needs
-				to be able to reach the other to establish a connection.
-			</p>
-			<p>
-				Copy the local ICE candidates and send them to the remote peer.
-			</p>
-			
 			ICE Gathering State: <span id="iceGatheringState">Unknown</span><br />
 			ICE Connection State: <span id="iceConnectionState">Unknown</span><br />
 			
-			<textarea id="localIceCandidates" class="ice"></textarea>
-
-			<h2>Exchanging Messages</h2>
-			<p>
-				Now that both peers are connected to
-				each other with open data channels,
-				they can send messages back and forth.
-			</p>
-
+			<h2>Chat</h2>
 
 			<div id="chatWindow" class="chat"></div>
 			<input id="messageTextBox">
