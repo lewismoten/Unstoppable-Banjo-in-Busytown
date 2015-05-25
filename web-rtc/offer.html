@@ -41,11 +41,10 @@
 			</p>
 
 			<p>
-				Copy the SDP and send it to the remote peer.
+				Copy the SDP and send it to the remote peer, or <button onclick="onStoreOffer()">Store</button> the value in this sites key/value store.
 			</p>
 
 			<textarea id="localSessionDescription" class="sdp"></textarea>
-			<img id="localSessionDescriptionImage" width="300" height="300" />
 
 			<h3>Remote Session Description</h3>
 
@@ -54,7 +53,7 @@
 				to send back as a remote session description.
 			</p>
 			<p>
-				Paste the SDP from the remote peer.
+				Paste the SDP from the remote peer, <button onclick="onRetrieveAnswer()">Retreive</button> the value from this sites key/value store.
 			</p>
 
 			<textarea id="remoteSessionDescription" class="sdp"></textarea>

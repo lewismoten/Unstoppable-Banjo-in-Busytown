@@ -35,7 +35,7 @@
 				such as audio and/or video. 
 			</p>
 			<p>
-				Paste the SDP from the remote peer.
+				Paste the SDP from the remote peer, or <button onclick="onRetrieveOffer()">Retrieve</button> the value in this sites key/value store.
 			</p>
 
 			Signaling State: <span id="signalingState">Unknown</span><br />
@@ -51,7 +51,8 @@
 
 			</p>
 			<p>
-				Copy the SDP and send it to the remote peer.
+				Copy the SDP and send it to the remote peer, or <button onclick="onStoreAnswer()">Store</button> the value in this sites key/value store.
+			</p>
 			</p>
 
 			<textarea id="localSessionDescription" class="sdp"></textarea>

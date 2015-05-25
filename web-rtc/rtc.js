@@ -169,20 +169,30 @@ function onConnectionDataChannel(dataChannelEvent) {
 function displayLocalDescription() {
 
 	localSessionDescription.value = connection.localDescription.sdp;
-	var type = connection.localDescription.type;
-	var url = window.location.href.replace(/\/[^\/\.]+\.html/, '/' + type + '.html');
-	url += '?' + escape(connection.localDescription.sdp);
+}
 
-	console.log('link', url);
+function onStoreOffer() {
+	setValue('webrtc-answer', '');
+	setValue('webrtc-offer', connection.localDescription.sdp);
+}
 
-	var qrCode = 'http://chart.googleapis.com/chart';
-	qrCode += '?cht=qr';
-	qrCode += '&chs=300x300';
-	qrCode += '&chl=' + escape(url);
+function onStoreAnswer() {
+	setValue('webrtc-answer', connection.localDescription.sdp);
+}
 
-	console.log('QR Code', qrCode);
-	//localSessionDescriptionImage.src = qrCode;
-
+function onRetrieveOffer() {
+	getValue('webrtc-offer', function(data) {
+		if(data.success) {
+			remoteSessionDescription.value = data.value;
+		}
+	});
+}
+function onRetrieveAnswer() {
+	getValue('webrtc-answer', function(data) {
+		if(data.success) {
+			remoteSessionDescription.value = data.value;
+		}
+	});
 }
 
 function getRemoteDescription(type) {
@@ -191,13 +201,12 @@ function getRemoteDescription(type) {
 
 function onConnectionIceCandidate(rtcIceCandidateEvent) {
 
-	displayLocalDescription();
 	displayStates();
+	displayLocalDescription();
 
 	if(!rtcIceCandidateEvent.candidate) {
 		// undefined candidate usually means gathering state has completed
 		log('End of candidates');
-		displayStates();
 		return;
 	}
 
@@ -351,6 +360,74 @@ function onSendMessage() {
 		default:
 			displayChat(null, 'Unknown state: ' + state);
 	}	
+}
+
+
+// ---[ Key/Value Store ]----------------------------------
+
+function getValue(key, callback) {
+
+	log('getting key: ' + key);
+
+	var pair = {
+		key: key,
+		value: undefined
+	};
+
+	post('/key-value-store/get.php', JSON.stringify(pair), callback);
+
+}
+
+function setValue(key, value) {
+
+	log('setting key: ' + key);
+
+	var pair = {
+		key: key,
+		value: value
+	};
+
+	post('/key-value-store/set.php', JSON.stringify(pair));
+
+}
+
+
+// ---[ Key/Value Store Internals ]------------------------
+
+
+function onError() {
+	log('Error when posting data');
+}
+
+function post(url, data, callbackSuccess) {
+
+	var request = new XMLHttpRequest();
+
+	request.open('POST', url, true);
+
+	// Hack to get around servers that only support this mime type
+	request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+	request.onerror = onError;
+	request.onabort = onError;
+	request.ontimeout = onError;
+
+	request.onreadystatechange = function() {
+
+		if(request.readyState === 4) {
+
+			log('posted data returned response from ' + url);
+
+			if(request.status === 200) {
+				if(typeof callbackSuccess === 'function') {
+					callbackSuccess(JSON.parse(request.responseText));
+				}
+			}
+		}
+	}
+
+	request.send(data);
+
 }
 
 reset();
